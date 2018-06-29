@@ -3,7 +3,7 @@
 This project contains a Runtime for Apache OpenWhisk that can be used to efficiently run Camel routes.
 
 The corresponding Docker image is build automatically and is available at
-  https://hub.docker.com/r/gnodet/openwhisk-camel/
+  https://hub.docker.com/r/gnodet/openwhisk-runtime-camel/
 
 To deploy a route in an OpenWhisk / OpenShift environment, build your route jar following the [camel-openwhisk-example] example and deploy it using the following command
 
