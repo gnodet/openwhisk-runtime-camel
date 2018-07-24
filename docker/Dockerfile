@@ -1,6 +1,6 @@
 FROM openjdk:10-jdk
 
-ARG CAMEL_OPENWHISK_CORE_VERSION="0.1.0-e540b50"
+ARG CAMEL_OPENWHISK_CORE_VERSION="0.2.0"
 
 RUN mkdir /opt/camelAction \
     && cd /opt/camelAction \
