@@ -48,14 +48,14 @@ import org.jboss.fuse.openwhisk.camel.core.json.JsonWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Proxy {
+public class CamelRuntime {
     private HttpServer server;
 
     private JarLoader loader = null;
 
-    private Logger log = LoggerFactory.getLogger(Proxy.class);
+    private Logger log = LoggerFactory.getLogger(CamelRuntime.class);
 
-    public Proxy(int port) throws IOException {
+    public CamelRuntime(int port) throws IOException {
         this.server = HttpServer.create(new InetSocketAddress(port), -1);
 
         this.server.createContext("/init", new InitHandler());
@@ -90,7 +90,8 @@ public class Proxy {
         public void handle(HttpExchange t) throws IOException {
             log.info("Initialize");
             if (loader != null) {
-                Proxy.writeError(t, "Cannot initialize the action more than once.");
+                CamelRuntime.writeError(t, "Cannot initialize the action more than once.");
+                log.error("Error during initialization: Cannot initialize the action more than once.");
                 return;
             }
 
@@ -108,18 +109,20 @@ public class Proxy {
                 // main method exists.
                 loader = new JarLoader(jarPath, mainClass);
 
-                Proxy.writeResponse(t, 200, "{ \"OK\": true }");
+                CamelRuntime.writeResponse(t, 200, "{ \"OK\": true }");
+                log.info("Initialization finished.");
             } catch (Exception e) {
-                e.printStackTrace(System.err);
-                Proxy.writeError(t, "An error has occurred (see logs for details): " + e);
+                log.error("Error during initialization", e);
+                CamelRuntime.writeError(t, "An error has occurred (see logs for details): " + e);
             }
         }
     }
 
     private class RunHandler implements HttpHandler {
         public void handle(HttpExchange t) throws IOException {
+            log.info("Running");
             if (loader == null) {
-                Proxy.writeError(t, "Cannot invoke an uninitialized action.");
+                CamelRuntime.writeError(t, "Cannot invoke an uninitialized action.");
                 return;
             }
 
@@ -145,13 +148,17 @@ public class Proxy {
 
                 StringWriter sw = new StringWriter();
                 JsonWriter.write(sw, output);
-                Proxy.writeResponse(t, 200, sw.toString());
+                CamelRuntime.writeResponse(t, 200, sw.toString());
+                log.info("Run finished");
             } catch (Exception e) {
-                e.printStackTrace(System.err);
-                Proxy.writeError(t, "An error has occurred (see logs for details): " + e);
+                log.error("Error during run", e);
+                CamelRuntime.writeError(t, "An error has occurred (see logs for details): " + e);
             } finally {
                 System.setSecurityManager(sm);
                 Thread.currentThread().setContextClassLoader(cl);
+
+                System.err.println("XXX_THE_END_OF_A_WHISK_ACTIVATION_XXX");
+                System.err.flush();
             }
         }
     }
@@ -216,8 +223,8 @@ public class Proxy {
                     return th;
                 }
             });
-            Proxy proxy = new Proxy(8080);
-            proxy.start();
+            CamelRuntime camelRuntime = new CamelRuntime(8080);
+            camelRuntime.start();
             CamelFunction function = new CamelFunction();
             function.addRouteBuilder(new CamelFunctionRouteBuilder() {
                 @Override
@@ -230,8 +237,8 @@ public class Proxy {
             System.out.println("OK !");
             System.exit(0);
         } else {
-            Proxy proxy = new Proxy(8080);
-            proxy.start();
+            CamelRuntime camelRuntime = new CamelRuntime(8080);
+            camelRuntime.start();
         }
     }
 }

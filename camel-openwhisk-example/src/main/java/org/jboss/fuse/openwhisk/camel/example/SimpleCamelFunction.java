@@ -21,8 +21,6 @@ import org.jboss.fuse.openwhisk.camel.api.CamelFunctionRouteBuilder;
 
 public class SimpleCamelFunction extends CamelFunctionRouteBuilder {
 
-    public static final String INPUT_ENDPOINT_URI = "function:input";
-
     @Override
     public void configure() {
         Executors.newCachedThreadPool(new ThreadFactory() {
